@@ -2,7 +2,6 @@
 # Created by Rodrigue G.
 
 import itertools
-
 '''
 A B-Tree of order m has these properties: 
 1) Each node has at most m children 
@@ -33,8 +32,16 @@ class BTreeNode:
     def isFull(self):
         return len(self.keys) >= self.order - 1
 
-    def addChildren(self, children):
-        self.children.append(children)
+    def addChildren(self, kid):
+        kid.parent = self
+        position = 0
+        if self.isLeafNode():
+            self.children.append(kid)
+        else:
+            for child in self.children:
+                if min(kid.keys) >= min(child.keys):
+                    position = position + 1
+            self.children.insert(position, kid)
 
     def deleteChildren(self, children):
         self.children.remove(children)
@@ -52,47 +59,59 @@ class BTreeNode:
             for children in self.children:
                 children.printTree()
 
-    def splitNode(self, key):
-        #Split the node in two parts (left node and right node), and keep the median
-        self.keys.append(key)
-        self.keys = sorted(self.keys)
-        median_index = len(self.keys) // 2
-        leftNode, rightNode = BTreeNode(self.keys[:median_index], [], self.parent, self.order), BTreeNode(self.keys[median_index:], [], self.parent, self.order)
-        self.keys = [self.keys[median_index]]
-        self.addChildren(leftNode)
-        self.addChildren(rightNode)
-
-    def insert(self, key):
-        if self.isFull():
-            if self.isLeafNode():
-                self.splitNode(key)
-            else:
-                suitable_child = 0
-                for i in range(0, len(self.children)):
-                    if (key >= min(self.children[i].keys)):
-                        suitable_child = i
-                self.children[suitable_child].insert(key)
+    def printUMLNode(self):
+        if self.isRootNode():
+            print("object root")
+            print("root : keys = [", end="")
+            for key in self.keys[:-1]:
+                  print(str(key), end=",")
+            print(str(self.keys[-1]) + "]")
+            for child in self.children:
+                  print("root --> n" + str(child.id))
         else:
-            if self.isLeafNode():
-                self.keys.append(key)
-                self.keys = sorted(self.keys)
-            else:
-                suitable_child = 0
-                for i in range(0, len(self.children)):
-                    if (key >= min(self.children[i].keys)):
-                        suitable_child = i
-                self.children[suitable_child].insert(key)
+            print("n" + str(self.id) + " : keys = [", end="")
+            for key in self.keys[:-1]:
+                  print(str(key), end=",")
+            print(str(self.keys[-1]) + "]")
+            for child in self.children:
+                  print("n" + str(self.id) + " --> n" + str(child.id))
+        for child in self.children:
+            child.printUMLNode()
 
+    def printUML(self):
+        print("@startuml")
+        print("hide circle")
+        self.printUMLNode()
+        print("@enduml")
 
-root = BTreeNode([1,10], [], None, 4)
-root.insert(7)
-root.insert(2)
-root.insert(11)
-root.insert(6)
-root.insert(9)
-root.insert(13)
-root.insert(1)
-root.insert(5)
-root.insert(4)
-root.insert(8)
-root.printTree()
+    def searchNode(self, value):
+        for key in self.keys:
+            if (key == value):
+                return True
+        return False
+
+    def locateNeighbourKey(self, value):
+        return None
+    
+    def delete(self, value):
+        if self.isLeafNode():
+            if self.searchNode(value):
+                self.keys.remove(value)
+                return
+        else:
+            if self.searchNode(value):
+                return
+
+root = BTreeNode([1,10], [], None, 3)
+#root.insert(7)
+#root.insert(2)
+#root.insert(11)
+#root.insert(6)
+#root.insert(13)
+#root.insert(9)
+#root.insert(14)
+#root.insert(5)
+#root.insert(4)
+#root.insert(8)
+#root.insert(12)
+root.printUML()
